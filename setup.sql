@@ -231,32 +231,6 @@ create or replace semantic view DEMO.LM.LOYALTY_PROGRAM_SV
 '
 	with extension (CA='{"tables":[{"name":"CUSTOMER_MASTER","dimensions":[{"name":"AGE"},{"name":"BIRTH_DATE"},{"name":"CITY"},{"name":"CUSTOMER_ID"},{"name":"CUSTOMER_NAME"},{"name":"ENROLLMENT_CHANNEL"},{"name":"ENROLLMENT_DATE"},{"name":"GENDER"},{"name":"INCOME_RANGE"},{"name":"MEMBERSHIP_RANK"},{"name":"MEMBERSHIP_STATUS"},{"name":"OCCUPATION"},{"name":"PREFECTURE"}],"facts":[{"name":"APP_USAGE_FLAG"},{"name":"DM_CONSENT_FLAG"},{"name":"TOTAL_POINTS"}]},{"name":"ID_POS_TRANSACTION","dimensions":[{"name":"CHANNEL_TYPE"},{"name":"CUSTOMER_ID"},{"name":"PARTNER_NAME"},{"name":"PAYMENT_METHOD"},{"name":"PRODUCT_CATEGORY"},{"name":"PRODUCT_NAME"},{"name":"RECEIPT_ID"},{"name":"STORE_ID"},{"name":"STORE_NAME"},{"name":"TRANSACTION_DATE"},{"name":"TRANSACTION_ID"},{"name":"TRANSACTION_TIME"}],"facts":[{"name":"POINTS_EARNED"},{"name":"POINTS_USED"},{"name":"QUANTITY"},{"name":"TOTAL_AMOUNT"},{"name":"UNIT_PRICE"}]},{"name":"POINT_HISTORY","dimensions":[{"name":"CUSTOMER_ID"},{"name":"EVENT_DATE"},{"name":"EVENT_TYPE"},{"name":"EXPIRATION_DATE"},{"name":"NOTE"},{"name":"POINT_ID"},{"name":"SOURCE_DETAIL"},{"name":"SOURCE_TYPE"},{"name":"TRANSACTION_ID"}],"facts":[{"name":"BALANCE_AFTER"},{"name":"POINTS"}]}],"relationships":[{"name":"TRANSACTION_TO_CUSTOMER"},{"name":"POINT_HISTORY_TO_CUSTOMER"},{"name":"POINT_HISTORY_TO_TRANSACTION"}],"verified_queries":[{"name":"\\"月別売上\\"","sql":"SELECT \\n  DATE_TRUNC(''MONTH'', t.TRANSACTION_DATE) AS \\"月\\",\\n  SUM(t.TOTAL_AMOUNT) AS \\"売上金額\\"\\nFROM DEMO.LM.ID_POS_TRANSACTION t\\nGROUP BY 1\\nORDER BY 1\\n","question":"月別の売上金額を教えてください","verified_at":1710489600,"verified_by":"admin"},{"name":"\\"会員ランク別売上\\"","sql":"SELECT \\n  c.MEMBERSHIP_RANK AS \\"会員ランク\\",\\n  COUNT(DISTINCT c.CUSTOMER_ID) AS \\"会員数\\",\\n  SUM(t.TOTAL_AMOUNT) AS \\"売上金額\\"\\nFROM DEMO.LM.CUSTOMER_MASTER c\\nLEFT JOIN DEMO.LM.ID_POS_TRANSACTION t ON c.CUSTOMER_ID = t.CUSTOMER_ID\\nGROUP BY 1\\nORDER BY 3 DESC\\n","question":"会員ランク別の売上を教えてください","verified_at":1710489600,"verified_by":"admin"}]}');
 
--- ============================================================
--- Step 8: Streamlit アプリ デプロイ
--- ============================================================
-
-CREATE OR REPLACE STAGE LM_STREAMLIT_STAGE
-    DIRECTORY = (ENABLE = TRUE)
-    ENCRYPTION = (TYPE = 'SNOWFLAKE_FULL')
-    COMMENT = 'Stage for Loyalty Marketing Streamlit app';
-
-ALTER GIT REPOSITORY LM_GIT_REPO FETCH;
-
-COPY FILES INTO @LM_STREAMLIT_STAGE/
-    FROM @LM_GIT_REPO/branches/main/
-    FILES = ('streamlit_app.py', 'environment.yml');
-
-COPY FILES INTO @LM_STREAMLIT_STAGE/.streamlit/
-    FROM @LM_GIT_REPO/branches/main/.streamlit/
-    FILES = ('config.toml');
-
-LIST @LM_STREAMLIT_STAGE;
-
-CREATE OR REPLACE STREAMLIT DEMO.LM.CUSTOMER_DASHBOARD
-    ROOT_LOCATION = '@DEMO.LM.LM_STREAMLIT_STAGE'
-    MAIN_FILE = 'streamlit_app.py'
-    QUERY_WAREHOUSE = LM_WH
-    COMMENT = 'ロイヤルティマーケティング 顧客抽出ダッシュボード';
 
 -- ============================================================
 -- Step 9: データ確認
