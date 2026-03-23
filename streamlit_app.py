@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import json
 import _snowflake
+from snowflake.snowpark.context import get_active_session
 
 st.set_page_config(
     page_title="顧客抽出ダッシュボード",
@@ -10,7 +11,7 @@ st.set_page_config(
     layout="wide"
 )
 
-conn = st.connection("snowflake")
+session = get_active_session()
 
 SEMANTIC_VIEW = "DEMO.LM.LOYALTY_PROGRAM_SV"
 
@@ -86,7 +87,7 @@ def get_filtered_values(table, column, existing_filters):
             conditions.append(f"{col} BETWEEN '{min_d}' AND '{max_d}'")
     
     where = " AND ".join(conditions) if conditions else "1=1"
-    df = conn.query(f"SELECT DISTINCT {column} FROM DEMO.LM.{table} WHERE {column} IS NOT NULL AND {where} ORDER BY {column}")
+    df = session.sql(f"SELECT DISTINCT {column} FROM DEMO.LM.{table} WHERE {column} IS NOT NULL AND {where} ORDER BY {column}").to_pandas()
     return df[column].tolist()
 
 def get_filtered_range(table, column, existing_filters):
@@ -102,7 +103,7 @@ def get_filtered_range(table, column, existing_filters):
             conditions.append(f"{col} BETWEEN {min_v} AND {max_v}")
     
     where = " AND ".join(conditions) if conditions else "1=1"
-    df = conn.query(f"SELECT MIN({column}) as min_val, MAX({column}) as max_val FROM DEMO.LM.{table} WHERE {where}")
+    df = session.sql(f"SELECT MIN({column}) as min_val, MAX({column}) as max_val FROM DEMO.LM.{table} WHERE {where}").to_pandas()
     return int(df["MIN_VAL"].iloc[0] or 0), int(df["MAX_VAL"].iloc[0] or 0)
 
 def get_filtered_date_range(table, column, existing_filters):
@@ -115,7 +116,7 @@ def get_filtered_date_range(table, column, existing_filters):
             conditions.append(f"{col} IN ('{escaped}')")
     
     where = " AND ".join(conditions) if conditions else "1=1"
-    df = conn.query(f"SELECT MIN({column}) as min_val, MAX({column}) as max_val FROM DEMO.LM.{table} WHERE {where}")
+    df = session.sql(f"SELECT MIN({column}) as min_val, MAX({column}) as max_val FROM DEMO.LM.{table} WHERE {where}").to_pandas()
     return df["MIN_VAL"].iloc[0], df["MAX_VAL"].iloc[0]
 
 def build_conditions(filters):
@@ -134,12 +135,12 @@ def build_conditions(filters):
 
 def get_customer_ids(table, conditions):
     where = " AND ".join(conditions) if conditions else "1=1"
-    df = conn.query(f"SELECT DISTINCT CUSTOMER_ID FROM DEMO.LM.{table} WHERE {where}")
+    df = session.sql(f"SELECT DISTINCT CUSTOMER_ID FROM DEMO.LM.{table} WHERE {where}").to_pandas()
     return set(df["CUSTOMER_ID"].tolist())
 
 @st.cache_data(ttl=600)
 def get_total_customers():
-    df = conn.query("SELECT COUNT(DISTINCT CUSTOMER_ID) as cnt FROM DEMO.LM.CUSTOMER_MASTER")
+    df = session.sql("SELECT COUNT(DISTINCT CUSTOMER_ID) as cnt FROM DEMO.LM.CUSTOMER_MASTER").to_pandas()
     return int(df["CNT"].iloc[0])
 
 for key in ["cm_filters", "pos_filters", "ph_filters"]:
@@ -499,13 +500,13 @@ with main_tab:
     if final_ids:
         final_list = sorted(list(final_ids))[:500]
         ids_str = "', '".join(final_list)
-        df_result = conn.query(f"""
+        df_result = session.sql(f"""
             SELECT CUSTOMER_ID, CUSTOMER_NAME, GENDER, AGE, PREFECTURE, 
                    MEMBERSHIP_RANK, TOTAL_POINTS, LAST_PURCHASE_DATE, MEMBERSHIP_STATUS
             FROM DEMO.LM.CUSTOMER_MASTER
             WHERE CUSTOMER_ID IN ('{ids_str}')
             ORDER BY TOTAL_POINTS DESC
-        """)
+        """).to_pandas()
         
         c1, c2, c3 = st.columns([1, 1, 4])
         c1.metric("抽出件数", f"{len(final_ids):,}")
@@ -594,7 +595,7 @@ with analyst_tab:
                             st.code(result["sql"], language="sql")
                         
                         try:
-                            df = conn.query(result["sql"])
+                            df = session.sql(result["sql"]).to_pandas()
                             assistant_msg["data"] = df
                             st.dataframe(df, use_container_width=True, hide_index=True)
                             
@@ -683,7 +684,7 @@ with csv_tab:
                             batch_ids = uploaded_ids[i:i+batch_size]
                             ids_str = "', '".join([id.replace("'", "''") for id in batch_ids])
                             
-                            df_batch = conn.query(f"""
+                            df_batch = session.sql(f"""
                                 SELECT CUSTOMER_ID, CUSTOMER_NAME, GENDER, AGE, PREFECTURE, CITY,
                                        MEMBERSHIP_RANK, MEMBERSHIP_STATUS, TOTAL_POINTS, 
                                        LAST_PURCHASE_DATE, ENROLLMENT_DATE,
@@ -691,7 +692,7 @@ with csv_tab:
                                        DM_CONSENT_FLAG, APP_USAGE_FLAG
                                 FROM DEMO.LM.CUSTOMER_MASTER
                                 WHERE CUSTOMER_ID IN ('{ids_str}')
-                            """)
+                            """).to_pandas()
                             all_results.append(df_batch)
                         
                         if all_results:
