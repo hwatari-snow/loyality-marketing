@@ -15,18 +15,18 @@ conn = st.connection("snowflake")
 SEMANTIC_VIEW = "DEMO.LM.LOYALTY_PROGRAM_SV"
 
 COLORS = {
-    "primary": "#B91C1C",
-    "primary_light": "#DC2626",
-    "primary_lighter": "#EF4444",
-    "primary_lightest": "#FCA5A5",
-    "accent": "#D97706",
-    "accent_light": "#F59E0B",
-    "success": "#059669",
-    "success_light": "#10B981",
-    "text_dark": "#1F2937",
+    "primary": "#F08C1F",
+    "primary_light": "#F5A623",
+    "primary_lighter": "#F9BE58",
+    "primary_lightest": "#FCDEA0",
+    "accent": "#E07818",
+    "accent_light": "#F08C1F",
+    "success": "#D96E0A",
+    "success_light": "#E88420",
+    "text_dark": "#3D2B14",
     "text_light": "#FFFFFF",
-    "bg_warm": "#FEF2F2",
-    "border": "#FECACA"
+    "bg_warm": "#FFF9F2",
+    "border": "#F5DCC0"
 }
 
 def call_analyst(question):
@@ -178,8 +178,8 @@ st.markdown("""
         padding: 10px 20px;
     }
     div[data-testid="stMetric"] {
-        background: linear-gradient(135deg, #FEF2F2, #FFFFFF);
-        border: 1px solid #FECACA;
+        background: linear-gradient(135deg, #FFF9F2, #FFFFFF);
+        border: 1px solid #F5DCC0;
         border-radius: 10px;
         padding: 15px;
     }
@@ -189,7 +189,7 @@ st.markdown("""
 st.markdown(f"""
 <div style="margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 3px solid {COLORS['primary']};">
     <h1 style="margin: 0; color: {COLORS['text_dark']}; font-size: 2rem;">顧客抽出ダッシュボード</h1>
-    <p style="margin: 5px 0 0 0; color: #6B7280; font-size: 0.9rem;">Loyalty Marketing Customer Extraction</p>
+    <p style="margin: 5px 0 0 0; color: #8C7A66; font-size: 0.9rem;">Loyalty Marketing Customer Extraction</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -430,7 +430,7 @@ with main_tab:
         with col1:
             st.markdown(f"""
             <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary']}, {COLORS['primary_light']}); 
-                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(185, 28, 28, 0.2);">
+                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(217, 110, 10, 0.2);">
                 <div style="font-size:11px; opacity:0.9;">STEP 0</div>
                 <div style="font-size:28px; font-weight:bold;">{total_customers:,}</div>
                 <div style="font-size:12px; opacity:0.9;">全顧客</div>
@@ -441,7 +441,7 @@ with main_tab:
             pct1 = cm_count / total_customers * 100 if total_customers > 0 else 100
             st.markdown(f"""
             <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary_light']}, {COLORS['primary_lighter']}); 
-                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);">
+                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(240, 140, 31, 0.2);">
                 <div style="font-size:11px; opacity:0.9;">STEP 1: 顧客マスタ</div>
                 <div style="font-size:28px; font-weight:bold;">{cm_count:,}</div>
                 <div style="font-size:12px; opacity:0.9;">{pct1:.1f}% / {len(st.session_state.cm_filters)}条件</div>
@@ -452,7 +452,7 @@ with main_tab:
             pct2 = after_cm_pos / total_customers * 100 if total_customers > 0 else 100
             st.markdown(f"""
             <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary_lighter']}, {COLORS['primary_lightest']}); 
-                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);">
+                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(245, 166, 35, 0.2);">
                 <div style="font-size:11px; opacity:0.9;">STEP 2: 購買履歴</div>
                 <div style="font-size:28px; font-weight:bold;">{after_cm_pos:,}</div>
                 <div style="font-size:12px; opacity:0.9;">{pct2:.1f}% / {len(st.session_state.pos_filters)}条件</div>
@@ -463,7 +463,7 @@ with main_tab:
             pct3 = len(final_ids) / total_customers * 100 if total_customers > 0 else 100
             st.markdown(f"""
             <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['success']}, {COLORS['success_light']}); 
-                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(5, 150, 105, 0.2);">
+                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(249, 190, 88, 0.2);">
                 <div style="font-size:11px; opacity:0.9;">STEP 3: 最終抽出</div>
                 <div style="font-size:28px; font-weight:bold;">{len(final_ids):,}</div>
                 <div style="font-size:12px; opacity:0.9;">{pct3:.1f}% / {len(st.session_state.ph_filters)}条件</div>
@@ -523,7 +523,7 @@ with analyst_tab:
         </div>
         <div>
             <h3 style="margin: 0; color: {COLORS['text_dark']};">自然言語で顧客を抽出</h3>
-            <p style="margin: 0; color: #6B7280; font-size: 0.85rem;">セマンティックビュー: {SEMANTIC_VIEW}</p>
+            <p style="margin: 0; color: #8C7A66; font-size: 0.85rem;">セマンティックビュー: {SEMANTIC_VIEW}</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -618,7 +618,7 @@ with csv_tab:
     <div style="display: flex; align-items: center; margin-bottom: 1rem;">
         <div>
             <h3 style="margin: 0; color: {COLORS['text_dark']};">CSVから顧客データを抽出</h3>
-            <p style="margin: 0; color: #6B7280; font-size: 0.85rem;">顧客IDリストをアップロードして顧客マスタを取得</p>
+            <p style="margin: 0; color: #8C7A66; font-size: 0.85rem;">顧客IDリストをアップロードして顧客マスタを取得</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
