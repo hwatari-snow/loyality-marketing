@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import json
 import _snowflake
-from snowflake.snowpark.context import get_active_session
 
 st.set_page_config(
     page_title="顧客抽出ダッシュボード",
@@ -11,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-session = get_active_session()
+conn = st.connection("snowflake")
 
 SEMANTIC_VIEW = "DEMO.LM.LOYALTY_PROGRAM_SV"
 
@@ -22,11 +21,10 @@ COLORS = {
     "primary_lightest": "#FCDEA0",
     "accent": "#E07818",
     "accent_light": "#F08C1F",
-    "final": "#D96E0A",
-    "final_light": "#E88420",
+    "success": "#D96E0A",
+    "success_light": "#E88420",
     "text_dark": "#3D2B14",
     "text_light": "#FFFFFF",
-    "text_sub": "#8C7A66",
     "bg_warm": "#FFF9F2",
     "border": "#F5DCC0"
 }
@@ -87,7 +85,7 @@ def get_filtered_values(table, column, existing_filters):
             conditions.append(f"{col} BETWEEN '{min_d}' AND '{max_d}'")
     
     where = " AND ".join(conditions) if conditions else "1=1"
-    df = session.sql(f"SELECT DISTINCT {column} FROM DEMO.LM.{table} WHERE {column} IS NOT NULL AND {where} ORDER BY {column}").to_pandas()
+    df = conn.query(f"SELECT DISTINCT {column} FROM DEMO.LM.{table} WHERE {column} IS NOT NULL AND {where} ORDER BY {column}")
     return df[column].tolist()
 
 def get_filtered_range(table, column, existing_filters):
@@ -103,7 +101,7 @@ def get_filtered_range(table, column, existing_filters):
             conditions.append(f"{col} BETWEEN {min_v} AND {max_v}")
     
     where = " AND ".join(conditions) if conditions else "1=1"
-    df = session.sql(f"SELECT MIN({column}) as min_val, MAX({column}) as max_val FROM DEMO.LM.{table} WHERE {where}").to_pandas()
+    df = conn.query(f"SELECT MIN({column}) as min_val, MAX({column}) as max_val FROM DEMO.LM.{table} WHERE {where}")
     return int(df["MIN_VAL"].iloc[0] or 0), int(df["MAX_VAL"].iloc[0] or 0)
 
 def get_filtered_date_range(table, column, existing_filters):
@@ -116,7 +114,7 @@ def get_filtered_date_range(table, column, existing_filters):
             conditions.append(f"{col} IN ('{escaped}')")
     
     where = " AND ".join(conditions) if conditions else "1=1"
-    df = session.sql(f"SELECT MIN({column}) as min_val, MAX({column}) as max_val FROM DEMO.LM.{table} WHERE {where}").to_pandas()
+    df = conn.query(f"SELECT MIN({column}) as min_val, MAX({column}) as max_val FROM DEMO.LM.{table} WHERE {where}")
     return df["MIN_VAL"].iloc[0], df["MAX_VAL"].iloc[0]
 
 def build_conditions(filters):
@@ -135,12 +133,12 @@ def build_conditions(filters):
 
 def get_customer_ids(table, conditions):
     where = " AND ".join(conditions) if conditions else "1=1"
-    df = session.sql(f"SELECT DISTINCT CUSTOMER_ID FROM DEMO.LM.{table} WHERE {where}").to_pandas()
+    df = conn.query(f"SELECT DISTINCT CUSTOMER_ID FROM DEMO.LM.{table} WHERE {where}")
     return set(df["CUSTOMER_ID"].tolist())
 
 @st.cache_data(ttl=600)
 def get_total_customers():
-    df = session.sql("SELECT COUNT(DISTINCT CUSTOMER_ID) as cnt FROM DEMO.LM.CUSTOMER_MASTER").to_pandas()
+    df = conn.query("SELECT COUNT(DISTINCT CUSTOMER_ID) as cnt FROM DEMO.LM.CUSTOMER_MASTER")
     return int(df["CNT"].iloc[0])
 
 for key in ["cm_filters", "pos_filters", "ph_filters"]:
@@ -191,7 +189,7 @@ st.markdown("""
 st.markdown(f"""
 <div style="margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 3px solid {COLORS['primary']};">
     <h1 style="margin: 0; color: {COLORS['text_dark']}; font-size: 2rem;">顧客抽出ダッシュボード</h1>
-    <p style="margin: 5px 0 0 0; color: {COLORS['text_sub']}; font-size: 0.9rem;">Loyalty Marketing Customer Extraction</p>
+    <p style="margin: 5px 0 0 0; color: #8C7A66; font-size: 0.9rem;">Loyalty Marketing Customer Extraction</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -381,93 +379,96 @@ with main_tab:
     col_funnel, col_waterfall = st.columns(2)
 
     with col_funnel:
-        st.markdown("**ファンネル（絞り込み過程）**")
-        fig_funnel = go.Figure(go.Funnel(
-            y=["全顧客", "顧客マスタ条件後", "購買履歴条件後", "最終抽出"],
-            x=[total_customers, cm_count, after_cm_pos, len(final_ids)],
-            textposition="inside",
-            textinfo="value+percent initial",
-            marker=dict(color=[COLORS["final"], COLORS["primary"], COLORS["primary_light"], COLORS["primary_lighter"]]),
-            connector=dict(line=dict(color=COLORS["border"], width=2))
-        ))
-        fig_funnel.update_layout(
-            height=350,
-            margin=dict(l=20, r=20, t=20, b=20),
-            font=dict(size=14),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)"
-        )
-        st.plotly_chart(fig_funnel, use_container_width=True)
+        with st.container(border=True):
+            st.markdown("**ファンネル（絞り込み過程）**")
+            fig_funnel = go.Figure(go.Funnel(
+                y=["全顧客", "顧客マスタ条件後", "購買履歴条件後", "最終抽出"],
+                x=[total_customers, cm_count, after_cm_pos, len(final_ids)],
+                textposition="inside",
+                textinfo="value+percent initial",
+                marker=dict(color=[COLORS["primary"], COLORS["primary_light"], COLORS["primary_lighter"], COLORS["success"]]),
+                connector=dict(line=dict(color=COLORS["border"], width=2))
+            ))
+            fig_funnel.update_layout(
+                height=350,
+                margin=dict(l=20, r=20, t=20, b=20),
+                font=dict(size=14),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)"
+            )
+            st.plotly_chart(fig_funnel, use_container_width=True)
 
     with col_waterfall:
-        st.markdown("**ウォーターフォール（増減内訳）**")
-        fig_waterfall = go.Figure(go.Waterfall(
-            orientation="v",
-            measure=["absolute", "relative", "relative", "relative", "total"],
-            x=["全顧客", "顧客マスタ", "購買履歴", "ポイント履歴", "最終"],
-            y=[total_customers, -excluded_cm, -excluded_pos, -excluded_ph, 0],
-            text=[f"{total_customers:,}", f"-{excluded_cm:,}", f"-{excluded_pos:,}", f"-{excluded_ph:,}", f"{len(final_ids):,}"],
-            textposition="outside",
-            connector=dict(line=dict(color=COLORS["border"], width=2)),
-            decreasing=dict(marker=dict(color=COLORS["primary_light"])),
-            increasing=dict(marker=dict(color=COLORS["primary"])),
-            totals=dict(marker=dict(color=COLORS["final"]))
-        ))
-        fig_waterfall.update_layout(
-            height=350,
-            margin=dict(l=20, r=20, t=20, b=20),
-            showlegend=False,
-            font=dict(size=12),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)"
-        )
-        st.plotly_chart(fig_waterfall, use_container_width=True)
+        with st.container(border=True):
+            st.markdown("**ウォーターフォール（増減内訳）**")
+            fig_waterfall = go.Figure(go.Waterfall(
+                orientation="v",
+                measure=["absolute", "relative", "relative", "relative", "total"],
+                x=["全顧客", "顧客マスタ", "購買履歴", "ポイント履歴", "最終"],
+                y=[total_customers, -excluded_cm, -excluded_pos, -excluded_ph, 0],
+                text=[f"{total_customers:,}", f"-{excluded_cm:,}", f"-{excluded_pos:,}", f"-{excluded_ph:,}", f"{len(final_ids):,}"],
+                textposition="outside",
+                connector=dict(line=dict(color=COLORS["border"], width=2)),
+                decreasing=dict(marker=dict(color=COLORS["primary_light"])),
+                increasing=dict(marker=dict(color=COLORS["success"])),
+                totals=dict(marker=dict(color=COLORS["success"]))
+            ))
+            fig_waterfall.update_layout(
+                height=350,
+                margin=dict(l=20, r=20, t=20, b=20),
+                showlegend=False,
+                font=dict(size=12),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)"
+            )
+            st.plotly_chart(fig_waterfall, use_container_width=True)
 
-    st.markdown("**フィルター適用状況**")
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.markdown(f"""
-        <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['final']}, {COLORS['final_light']}); 
-                    border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(217, 110, 10, 0.2);">
-            <div style="font-size:11px; opacity:0.9;">STEP 0</div>
-            <div style="font-size:28px; font-weight:bold;">{total_customers:,}</div>
-            <div style="font-size:12px; opacity:0.9;">全顧客</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        pct1 = cm_count / total_customers * 100 if total_customers > 0 else 100
-        st.markdown(f"""
-        <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['final_light']}, {COLORS['primary']}); 
-                    border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(240, 140, 31, 0.2);">
-            <div style="font-size:11px; opacity:0.9;">STEP 1: 顧客マスタ</div>
-            <div style="font-size:28px; font-weight:bold;">{cm_count:,}</div>
-            <div style="font-size:12px; opacity:0.9;">{pct1:.1f}% / {len(st.session_state.cm_filters)}条件</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col3:
-        pct2 = after_cm_pos / total_customers * 100 if total_customers > 0 else 100
-        st.markdown(f"""
-        <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary']}, {COLORS['primary_light']}); 
-                    border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(245, 166, 35, 0.2);">
-            <div style="font-size:11px; opacity:0.9;">STEP 2: 購買履歴</div>
-            <div style="font-size:28px; font-weight:bold;">{after_cm_pos:,}</div>
-            <div style="font-size:12px; opacity:0.9;">{pct2:.1f}% / {len(st.session_state.pos_filters)}条件</div>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col4:
-        pct3 = len(final_ids) / total_customers * 100 if total_customers > 0 else 100
-        st.markdown(f"""
-        <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary_light']}, {COLORS['primary_lighter']}); 
-                    border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(249, 190, 88, 0.2);">
-            <div style="font-size:11px; opacity:0.9;">STEP 3: 最終抽出</div>
-            <div style="font-size:28px; font-weight:bold;">{len(final_ids):,}</div>
-            <div style="font-size:12px; opacity:0.9;">{pct3:.1f}% / {len(st.session_state.ph_filters)}条件</div>
-        </div>
-        """, unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown("**フィルター適用状況**")
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.markdown(f"""
+            <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary']}, {COLORS['primary_light']}); 
+                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(217, 110, 10, 0.2);">
+                <div style="font-size:11px; opacity:0.9;">STEP 0</div>
+                <div style="font-size:28px; font-weight:bold;">{total_customers:,}</div>
+                <div style="font-size:12px; opacity:0.9;">全顧客</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col2:
+            pct1 = cm_count / total_customers * 100 if total_customers > 0 else 100
+            st.markdown(f"""
+            <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary_light']}, {COLORS['primary_lighter']}); 
+                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(240, 140, 31, 0.2);">
+                <div style="font-size:11px; opacity:0.9;">STEP 1: 顧客マスタ</div>
+                <div style="font-size:28px; font-weight:bold;">{cm_count:,}</div>
+                <div style="font-size:12px; opacity:0.9;">{pct1:.1f}% / {len(st.session_state.cm_filters)}条件</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col3:
+            pct2 = after_cm_pos / total_customers * 100 if total_customers > 0 else 100
+            st.markdown(f"""
+            <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary_lighter']}, {COLORS['primary_lightest']}); 
+                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(245, 166, 35, 0.2);">
+                <div style="font-size:11px; opacity:0.9;">STEP 2: 購買履歴</div>
+                <div style="font-size:28px; font-weight:bold;">{after_cm_pos:,}</div>
+                <div style="font-size:12px; opacity:0.9;">{pct2:.1f}% / {len(st.session_state.pos_filters)}条件</div>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with col4:
+            pct3 = len(final_ids) / total_customers * 100 if total_customers > 0 else 100
+            st.markdown(f"""
+            <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['success']}, {COLORS['success_light']}); 
+                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(249, 190, 88, 0.2);">
+                <div style="font-size:11px; opacity:0.9;">STEP 3: 最終抽出</div>
+                <div style="font-size:28px; font-weight:bold;">{len(final_ids):,}</div>
+                <div style="font-size:12px; opacity:0.9;">{pct3:.1f}% / {len(st.session_state.ph_filters)}条件</div>
+            </div>
+            """, unsafe_allow_html=True)
 
     st.markdown(f"""
     <div style="display: flex; align-items: center; margin: 2rem 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 3px solid {COLORS['primary']};">
@@ -479,13 +480,13 @@ with main_tab:
     if final_ids:
         final_list = sorted(list(final_ids))[:500]
         ids_str = "', '".join(final_list)
-        df_result = session.sql(f"""
+        df_result = conn.query(f"""
             SELECT CUSTOMER_ID, CUSTOMER_NAME, GENDER, AGE, PREFECTURE, 
                    MEMBERSHIP_RANK, TOTAL_POINTS, LAST_PURCHASE_DATE, MEMBERSHIP_STATUS
             FROM DEMO.LM.CUSTOMER_MASTER
             WHERE CUSTOMER_ID IN ('{ids_str}')
             ORDER BY TOTAL_POINTS DESC
-        """).to_pandas()
+        """)
         
         c1, c2, c3 = st.columns([1, 1, 4])
         c1.metric("抽出件数", f"{len(final_ids):,}")
@@ -493,13 +494,23 @@ with main_tab:
         if len(final_ids) > 500:
             c3.caption("ℹ️ 上位500件を表示しています")
         
-        df_display = df_result.rename(columns={
-            "CUSTOMER_ID": "顧客ID", "CUSTOMER_NAME": "氏名", "GENDER": "性別",
-            "AGE": "年齢", "PREFECTURE": "都道府県", "MEMBERSHIP_RANK": "ランク",
-            "TOTAL_POINTS": "累計ポイント", "LAST_PURCHASE_DATE": "最終購入日",
-            "MEMBERSHIP_STATUS": "ステータス"
-        })
-        st.dataframe(df_display, use_container_width=True, hide_index=True, height=350)
+        st.dataframe(
+            df_result,
+            use_container_width=True,
+            hide_index=True,
+            height=350,
+            column_config={
+                "CUSTOMER_ID": st.column_config.TextColumn("顧客ID", width="small"),
+                "CUSTOMER_NAME": st.column_config.TextColumn("氏名", width="medium"),
+                "GENDER": st.column_config.TextColumn("性別", width="small"),
+                "AGE": st.column_config.NumberColumn("年齢", width="small"),
+                "PREFECTURE": st.column_config.TextColumn("都道府県", width="small"),
+                "MEMBERSHIP_RANK": st.column_config.TextColumn("ランク", width="small"),
+                "TOTAL_POINTS": st.column_config.NumberColumn("累計ポイント", format="%d"),
+                "LAST_PURCHASE_DATE": st.column_config.DateColumn("最終購入日"),
+                "MEMBERSHIP_STATUS": st.column_config.TextColumn("ステータス", width="small"),
+            }
+        )
     else:
         st.warning("条件に該当する顧客がいません", icon="⚠️")
 
@@ -512,21 +523,22 @@ with analyst_tab:
         </div>
         <div>
             <h3 style="margin: 0; color: {COLORS['text_dark']};">自然言語で顧客を抽出</h3>
-            <p style="margin: 0; color: {COLORS['text_sub']}; font-size: 0.85rem;">セマンティックビュー: {SEMANTIC_VIEW}</p>
+            <p style="margin: 0; color: #8C7A66; font-size: 0.85rem;">セマンティックビュー: {SEMANTIC_VIEW}</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("**💡 質問例:**")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.caption("• 東京都在住のゴールド会員の顧客を抽出して")
-        st.caption("• 過去3ヶ月で10万円以上購入した顧客は？")
-        st.caption("• アプリを利用していてDM同意済みの顧客リスト")
-    with col2:
-        st.caption("• ポイント残高が5000以上の顧客を教えて")
-        st.caption("• 30代女性で化粧品カテゴリを購入した顧客")
-        st.caption("• 最終購入日が1年以上前の休眠顧客を抽出")
+    with st.container(border=True):
+        st.markdown("**💡 質問例:**")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.caption("• 東京都在住のゴールド会員の顧客を抽出して")
+            st.caption("• 過去3ヶ月で10万円以上購入した顧客は？")
+            st.caption("• アプリを利用していてDM同意済みの顧客リスト")
+        with col2:
+            st.caption("• ポイント残高が5000以上の顧客を教えて")
+            st.caption("• 30代女性で化粧品カテゴリを購入した顧客")
+            st.caption("• 最終購入日が1年以上前の休眠顧客を抽出")
     
     for msg in st.session_state.analyst_messages:
         with st.chat_message(msg["role"], avatar="👤" if msg["role"] == "user" else "🤖"):
@@ -563,7 +575,7 @@ with analyst_tab:
                             st.code(result["sql"], language="sql")
                         
                         try:
-                            df = session.sql(result["sql"]).to_pandas()
+                            df = conn.query(result["sql"])
                             assistant_msg["data"] = df
                             st.dataframe(df, use_container_width=True, hide_index=True)
                             
@@ -606,15 +618,16 @@ with csv_tab:
     <div style="display: flex; align-items: center; margin-bottom: 1rem;">
         <div>
             <h3 style="margin: 0; color: {COLORS['text_dark']};">CSVから顧客データを抽出</h3>
-            <p style="margin: 0; color: {COLORS['text_sub']}; font-size: 0.85rem;">顧客IDリストをアップロードして顧客マスタを取得</p>
+            <p style="margin: 0; color: #8C7A66; font-size: 0.85rem;">顧客IDリストをアップロードして顧客マスタを取得</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
     
-    st.markdown("**📋 使い方:**")
-    st.caption("1. CUSTOMER_ID列を含むCSVファイルをアップロード")
-    st.caption("2. アップロードされたIDと顧客マスタを照合")
-    st.caption("3. マッチした顧客データをCSVでダウンロード")
+    with st.container(border=True):
+        st.markdown("**📋 使い方:**")
+        st.caption("1. CUSTOMER_ID列を含むCSVファイルをアップロード")
+        st.caption("2. アップロードされたIDと顧客マスタを照合")
+        st.caption("3. マッチした顧客データをCSVでダウンロード")
     
     uploaded_file = st.file_uploader("CSVファイルをアップロード", type=["csv"], key="csv_upload")
     
@@ -651,7 +664,7 @@ with csv_tab:
                             batch_ids = uploaded_ids[i:i+batch_size]
                             ids_str = "', '".join([id.replace("'", "''") for id in batch_ids])
                             
-                            df_batch = session.sql(f"""
+                            df_batch = conn.query(f"""
                                 SELECT CUSTOMER_ID, CUSTOMER_NAME, GENDER, AGE, PREFECTURE, CITY,
                                        MEMBERSHIP_RANK, MEMBERSHIP_STATUS, TOTAL_POINTS, 
                                        LAST_PURCHASE_DATE, ENROLLMENT_DATE,
@@ -659,7 +672,7 @@ with csv_tab:
                                        DM_CONSENT_FLAG, APP_USAGE_FLAG
                                 FROM DEMO.LM.CUSTOMER_MASTER
                                 WHERE CUSTOMER_ID IN ('{ids_str}')
-                            """).to_pandas()
+                            """)
                             all_results.append(df_batch)
                         
                         if all_results:
@@ -683,16 +696,23 @@ with csv_tab:
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    df_disp = df_result.rename(columns={
-                        "CUSTOMER_ID": "顧客ID", "CUSTOMER_NAME": "氏名", "GENDER": "性別",
-                        "AGE": "年齢", "PREFECTURE": "都道府県", "CITY": "市区町村",
-                        "MEMBERSHIP_RANK": "ランク", "MEMBERSHIP_STATUS": "ステータス",
-                        "TOTAL_POINTS": "累計ポイント", "LAST_PURCHASE_DATE": "最終購入日",
-                        "ENROLLMENT_DATE": "入会日", "OCCUPATION": "職業",
-                        "INCOME_RANGE": "年収帯", "ENROLLMENT_CHANNEL": "入会チャネル",
-                        "DM_CONSENT_FLAG": "DM同意", "APP_USAGE_FLAG": "アプリ利用"
-                    })
-                    st.dataframe(df_disp, use_container_width=True, hide_index=True, height=400)
+                    st.dataframe(
+                        df_result,
+                        use_container_width=True,
+                        hide_index=True,
+                        height=400,
+                        column_config={
+                            "CUSTOMER_ID": st.column_config.TextColumn("顧客ID", width="small"),
+                            "CUSTOMER_NAME": st.column_config.TextColumn("氏名", width="medium"),
+                            "GENDER": st.column_config.TextColumn("性別", width="small"),
+                            "AGE": st.column_config.NumberColumn("年齢", width="small"),
+                            "PREFECTURE": st.column_config.TextColumn("都道府県", width="small"),
+                            "MEMBERSHIP_RANK": st.column_config.TextColumn("ランク", width="small"),
+                            "TOTAL_POINTS": st.column_config.NumberColumn("累計ポイント", format="%d"),
+                            "LAST_PURCHASE_DATE": st.column_config.DateColumn("最終購入日"),
+                            "MEMBERSHIP_STATUS": st.column_config.TextColumn("ステータス", width="small"),
+                        }
+                    )
                     
                     csv_data = df_result.to_csv(index=False).encode('utf-8-sig')
                     st.download_button(
