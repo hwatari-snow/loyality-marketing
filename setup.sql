@@ -244,7 +244,7 @@ ALTER GIT REPOSITORY LM_GIT_REPO FETCH;
 
 COPY FILES INTO @LM_STREAMLIT_STAGE/
     FROM @LM_GIT_REPO/branches/main/
-    FILES = ('streamlit_app.py');
+    FILES = ('streamlit_app.py', 'environment.yml');
 
 COPY FILES INTO @LM_STREAMLIT_STAGE/.streamlit/
     FROM @LM_GIT_REPO/branches/main/.streamlit/
