@@ -391,7 +391,7 @@ with main_tab:
     col_funnel, col_waterfall = st.columns(2)
 
     with col_funnel:
-        with st.container(border=True):
+        with st.container():
             st.markdown("**ファンネル（絞り込み過程）**")
             fig_funnel = go.Figure(go.Funnel(
                 y=["全顧客", "顧客マスタ条件後", "購買履歴条件後", "最終抽出"],
@@ -411,7 +411,7 @@ with main_tab:
             st.plotly_chart(fig_funnel, use_container_width=True)
 
     with col_waterfall:
-        with st.container(border=True):
+        with st.container():
             st.markdown("**ウォーターフォール（増減内訳）**")
             fig_waterfall = go.Figure(go.Waterfall(
                 orientation="v",
@@ -435,7 +435,7 @@ with main_tab:
             )
             st.plotly_chart(fig_waterfall, use_container_width=True)
 
-    with st.container(border=True):
+    with st.container():
         st.markdown(f"""<div style="font-weight:600; color:{COLORS['text_dark']}; margin-bottom:4px;">フィルター適用状況</div>""", unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
         
@@ -548,7 +548,7 @@ with analyst_tab:
     </div>
     """, unsafe_allow_html=True)
     
-    with st.container(border=True):
+    with st.container():
         st.markdown("**💡 質問例:**")
         col1, col2 = st.columns(2)
         with col1:
@@ -643,7 +643,7 @@ with csv_tab:
     </div>
     """, unsafe_allow_html=True)
     
-    with st.container(border=True):
+    with st.container():
         st.markdown("**📋 使い方:**")
         st.caption("1. CUSTOMER_ID列を含むCSVファイルをアップロード")
         st.caption("2. アップロードされたIDと顧客マスタを照合")
