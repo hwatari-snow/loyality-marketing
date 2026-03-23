@@ -15,18 +15,18 @@ conn = st.connection("snowflake")
 SEMANTIC_VIEW = "DEMO.LM.LOYALTY_PROGRAM_SV"
 
 COLORS = {
-    "primary": "#B91C1C",
-    "primary_light": "#DC2626",
-    "primary_lighter": "#EF4444",
-    "primary_lightest": "#FCA5A5",
-    "accent": "#D97706",
-    "accent_light": "#F59E0B",
+    "primary": "#E87A00",
+    "primary_light": "#F59E0B",
+    "primary_lighter": "#FBBF24",
+    "primary_lightest": "#FDE68A",
+    "accent": "#C2610A",
+    "accent_light": "#E87A00",
     "success": "#059669",
     "success_light": "#10B981",
     "text_dark": "#1F2937",
     "text_light": "#FFFFFF",
-    "bg_warm": "#FEF2F2",
-    "border": "#FECACA"
+    "bg_warm": "#FFF5EB",
+    "border": "#FED7AA"
 }
 
 def call_analyst(question):
@@ -178,8 +178,8 @@ st.markdown("""
         padding: 10px 20px;
     }
     div[data-testid="stMetric"] {
-        background: linear-gradient(135deg, #FEF2F2, #FFFFFF);
-        border: 1px solid #FECACA;
+        background: linear-gradient(135deg, #FFF5EB, #FFFFFF);
+        border: 1px solid #FED7AA;
         border-radius: 10px;
         padding: 15px;
     }
@@ -430,7 +430,7 @@ with main_tab:
         with col1:
             st.markdown(f"""
             <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary']}, {COLORS['primary_light']}); 
-                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(185, 28, 28, 0.2);">
+                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(232, 122, 0, 0.25);">
                 <div style="font-size:11px; opacity:0.9;">STEP 0</div>
                 <div style="font-size:28px; font-weight:bold;">{total_customers:,}</div>
                 <div style="font-size:12px; opacity:0.9;">全顧客</div>
@@ -441,7 +441,7 @@ with main_tab:
             pct1 = cm_count / total_customers * 100 if total_customers > 0 else 100
             st.markdown(f"""
             <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary_light']}, {COLORS['primary_lighter']}); 
-                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);">
+                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.25);">
                 <div style="font-size:11px; opacity:0.9;">STEP 1: 顧客マスタ</div>
                 <div style="font-size:28px; font-weight:bold;">{cm_count:,}</div>
                 <div style="font-size:12px; opacity:0.9;">{pct1:.1f}% / {len(st.session_state.cm_filters)}条件</div>
@@ -452,7 +452,7 @@ with main_tab:
             pct2 = after_cm_pos / total_customers * 100 if total_customers > 0 else 100
             st.markdown(f"""
             <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary_lighter']}, {COLORS['primary_lightest']}); 
-                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);">
+                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(251, 191, 36, 0.25);">
                 <div style="font-size:11px; opacity:0.9;">STEP 2: 購買履歴</div>
                 <div style="font-size:28px; font-weight:bold;">{after_cm_pos:,}</div>
                 <div style="font-size:12px; opacity:0.9;">{pct2:.1f}% / {len(st.session_state.pos_filters)}条件</div>
@@ -463,7 +463,7 @@ with main_tab:
             pct3 = len(final_ids) / total_customers * 100 if total_customers > 0 else 100
             st.markdown(f"""
             <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['success']}, {COLORS['success_light']}); 
-                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(5, 150, 105, 0.2);">
+                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(5, 150, 105, 0.25);">
                 <div style="font-size:11px; opacity:0.9;">STEP 3: 最終抽出</div>
                 <div style="font-size:28px; font-weight:bold;">{len(final_ids):,}</div>
                 <div style="font-size:12px; opacity:0.9;">{pct3:.1f}% / {len(st.session_state.ph_filters)}条件</div>
