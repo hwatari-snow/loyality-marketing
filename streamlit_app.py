@@ -514,23 +514,13 @@ with main_tab:
         if len(final_ids) > 500:
             c3.caption("ℹ️ 上位500件を表示しています")
         
-        st.dataframe(
-            df_result,
-            use_container_width=True,
-            hide_index=True,
-            height=350,
-            column_config={
-                "CUSTOMER_ID": st.column_config.TextColumn("顧客ID", width="small"),
-                "CUSTOMER_NAME": st.column_config.TextColumn("氏名", width="medium"),
-                "GENDER": st.column_config.TextColumn("性別", width="small"),
-                "AGE": st.column_config.NumberColumn("年齢", width="small"),
-                "PREFECTURE": st.column_config.TextColumn("都道府県", width="small"),
-                "MEMBERSHIP_RANK": st.column_config.TextColumn("ランク", width="small"),
-                "TOTAL_POINTS": st.column_config.NumberColumn("累計ポイント", format="%d"),
-                "LAST_PURCHASE_DATE": st.column_config.DateColumn("最終購入日"),
-                "MEMBERSHIP_STATUS": st.column_config.TextColumn("ステータス", width="small"),
-            }
-        )
+        df_display = df_result.rename(columns={
+            "CUSTOMER_ID": "顧客ID", "CUSTOMER_NAME": "氏名", "GENDER": "性別",
+            "AGE": "年齢", "PREFECTURE": "都道府県", "MEMBERSHIP_RANK": "ランク",
+            "TOTAL_POINTS": "累計ポイント", "LAST_PURCHASE_DATE": "最終購入日",
+            "MEMBERSHIP_STATUS": "ステータス"
+        })
+        st.dataframe(df_display, use_container_width=True, hide_index=True, height=350)
     else:
         st.warning("条件に該当する顧客がいません", icon="⚠️")
 
@@ -716,23 +706,16 @@ with csv_tab:
                     </div>
                     """, unsafe_allow_html=True)
                     
-                    st.dataframe(
-                        df_result,
-                        use_container_width=True,
-                        hide_index=True,
-                        height=400,
-                        column_config={
-                            "CUSTOMER_ID": st.column_config.TextColumn("顧客ID", width="small"),
-                            "CUSTOMER_NAME": st.column_config.TextColumn("氏名", width="medium"),
-                            "GENDER": st.column_config.TextColumn("性別", width="small"),
-                            "AGE": st.column_config.NumberColumn("年齢", width="small"),
-                            "PREFECTURE": st.column_config.TextColumn("都道府県", width="small"),
-                            "MEMBERSHIP_RANK": st.column_config.TextColumn("ランク", width="small"),
-                            "TOTAL_POINTS": st.column_config.NumberColumn("累計ポイント", format="%d"),
-                            "LAST_PURCHASE_DATE": st.column_config.DateColumn("最終購入日"),
-                            "MEMBERSHIP_STATUS": st.column_config.TextColumn("ステータス", width="small"),
-                        }
-                    )
+                    df_disp = df_result.rename(columns={
+                        "CUSTOMER_ID": "顧客ID", "CUSTOMER_NAME": "氏名", "GENDER": "性別",
+                        "AGE": "年齢", "PREFECTURE": "都道府県", "CITY": "市区町村",
+                        "MEMBERSHIP_RANK": "ランク", "MEMBERSHIP_STATUS": "ステータス",
+                        "TOTAL_POINTS": "累計ポイント", "LAST_PURCHASE_DATE": "最終購入日",
+                        "ENROLLMENT_DATE": "入会日", "OCCUPATION": "職業",
+                        "INCOME_RANGE": "年収帯", "ENROLLMENT_CHANNEL": "入会チャネル",
+                        "DM_CONSENT_FLAG": "DM同意", "APP_USAGE_FLAG": "アプリ利用"
+                    })
+                    st.dataframe(df_disp, use_container_width=True, hide_index=True, height=400)
                     
                     csv_data = df_result.to_csv(index=False).encode('utf-8-sig')
                     st.download_button(
