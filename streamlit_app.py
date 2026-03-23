@@ -21,8 +21,8 @@ COLORS = {
     "primary_lightest": "#FDE68A",
     "accent": "#C2610A",
     "accent_light": "#E87A00",
-    "success": "#059669",
-    "success_light": "#10B981",
+    "success": "#C2610A",
+    "success_light": "#D97B1E",
     "text_dark": "#1F2937",
     "text_light": "#FFFFFF",
     "bg_warm": "#FFF5EB",
@@ -463,7 +463,7 @@ with main_tab:
             pct3 = len(final_ids) / total_customers * 100 if total_customers > 0 else 100
             st.markdown(f"""
             <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['success']}, {COLORS['success_light']}); 
-                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(5, 150, 105, 0.25);">
+                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(194, 97, 10, 0.25);">
                 <div style="font-size:11px; opacity:0.9;">STEP 3: 最終抽出</div>
                 <div style="font-size:28px; font-weight:bold;">{len(final_ids):,}</div>
                 <div style="font-size:12px; opacity:0.9;">{pct3:.1f}% / {len(st.session_state.ph_filters)}条件</div>
