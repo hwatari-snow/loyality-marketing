@@ -15,18 +15,19 @@ conn = st.connection("snowflake")
 SEMANTIC_VIEW = "DEMO.LM.LOYALTY_PROGRAM_SV"
 
 COLORS = {
-    "primary": "#E87A00",
-    "primary_light": "#F59E0B",
-    "primary_lighter": "#FBBF24",
-    "primary_lightest": "#FDE68A",
-    "accent": "#C2610A",
-    "accent_light": "#E87A00",
-    "success": "#C2610A",
-    "success_light": "#D97B1E",
-    "text_dark": "#1F2937",
+    "primary": "#D96E0A",
+    "primary_light": "#E8913A",
+    "primary_lighter": "#F0AD5E",
+    "primary_lightest": "#F8D4A0",
+    "accent": "#B85800",
+    "accent_light": "#D96E0A",
+    "final": "#A04B08",
+    "final_light": "#C25E10",
+    "text_dark": "#2D1A05",
     "text_light": "#FFFFFF",
-    "bg_warm": "#FFF5EB",
-    "border": "#FED7AA"
+    "text_sub": "#7C6B58",
+    "bg_warm": "#FDF6EE",
+    "border": "#EECCA8"
 }
 
 def call_analyst(question):
@@ -178,18 +179,28 @@ st.markdown("""
         padding: 10px 20px;
     }
     div[data-testid="stMetric"] {
-        background: linear-gradient(135deg, #FFF5EB, #FFFFFF);
-        border: 1px solid #FED7AA;
-        border-radius: 10px;
-        padding: 15px;
+        background: linear-gradient(135deg, #FDF6EE 0%, #FEFAF5 100%);
+        border: 1px solid #EECCA8;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 1px 3px rgba(169, 107, 40, 0.08);
+    }
+    div[data-testid="stMetric"] label {
+        color: #7C6B58 !important;
+    }
+    .stContainer > div {
+        border-color: #EECCA8 !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown(f"""
-<div style="margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 3px solid {COLORS['primary']};">
-    <h1 style="margin: 0; color: {COLORS['text_dark']}; font-size: 2rem;">顧客抽出ダッシュボード</h1>
-    <p style="margin: 5px 0 0 0; color: #6B7280; font-size: 0.9rem;">Loyalty Marketing Customer Extraction</p>
+<div style="margin-bottom: 1.2rem; padding-bottom: 0.8rem; 
+            border-bottom: 3px solid {COLORS['primary']}; 
+            background: linear-gradient(90deg, rgba(217,110,10,0.06) 0%, transparent 60%);
+            padding: 0.6rem 0.8rem; border-radius: 4px 4px 0 0;">
+    <h1 style="margin: 0; color: {COLORS['text_dark']}; font-size: 2rem; font-weight: 700; letter-spacing: -0.02em;">顧客抽出ダッシュボード</h1>
+    <p style="margin: 5px 0 0 0; color: {COLORS['text_sub']}; font-size: 0.88rem; letter-spacing: 0.03em;">Loyalty Marketing — Customer Extraction</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -386,7 +397,7 @@ with main_tab:
                 x=[total_customers, cm_count, after_cm_pos, len(final_ids)],
                 textposition="inside",
                 textinfo="value+percent initial",
-                marker=dict(color=[COLORS["primary"], COLORS["primary_light"], COLORS["primary_lighter"], COLORS["success"]]),
+                marker=dict(color=["#A04B08", "#C25E10", "#D96E0A", "#E8913A"]),
                 connector=dict(line=dict(color=COLORS["border"], width=2))
             ))
             fig_funnel.update_layout(
@@ -409,9 +420,9 @@ with main_tab:
                 text=[f"{total_customers:,}", f"-{excluded_cm:,}", f"-{excluded_pos:,}", f"-{excluded_ph:,}", f"{len(final_ids):,}"],
                 textposition="outside",
                 connector=dict(line=dict(color=COLORS["border"], width=2)),
-                decreasing=dict(marker=dict(color=COLORS["primary_light"])),
-                increasing=dict(marker=dict(color=COLORS["success"])),
-                totals=dict(marker=dict(color=COLORS["success"]))
+                decreasing=dict(marker=dict(color="#E8913A")),
+                increasing=dict(marker=dict(color="#D96E0A")),
+                totals=dict(marker=dict(color="#A04B08"))
             ))
             fig_waterfall.update_layout(
                 height=350,
@@ -424,49 +435,57 @@ with main_tab:
             st.plotly_chart(fig_waterfall, use_container_width=True)
 
     with st.container(border=True):
-        st.markdown("**フィルター適用状況**")
+        st.markdown(f"""<div style="font-weight:600; color:{COLORS['text_dark']}; margin-bottom:4px;">フィルター適用状況</div>""", unsafe_allow_html=True)
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
             st.markdown(f"""
-            <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary']}, {COLORS['primary_light']}); 
-                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(232, 122, 0, 0.25);">
-                <div style="font-size:11px; opacity:0.9;">STEP 0</div>
-                <div style="font-size:28px; font-weight:bold;">{total_customers:,}</div>
-                <div style="font-size:12px; opacity:0.9;">全顧客</div>
+            <div style="text-align:center; padding:18px 12px; 
+                        background: linear-gradient(145deg, #A04B08, #C25E10); 
+                        border-radius:14px; color:white; 
+                        box-shadow: 0 6px 16px rgba(160,75,8,0.30), inset 0 1px 0 rgba(255,255,255,0.15);">
+                <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85;">Step 0</div>
+                <div style="font-size:32px; font-weight:700; margin:4px 0; text-shadow: 0 1px 2px rgba(0,0,0,0.15);">{total_customers:,}</div>
+                <div style="font-size:11px; opacity:0.85;">全顧客</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col2:
             pct1 = cm_count / total_customers * 100 if total_customers > 0 else 100
             st.markdown(f"""
-            <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary_light']}, {COLORS['primary_lighter']}); 
-                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.25);">
-                <div style="font-size:11px; opacity:0.9;">STEP 1: 顧客マスタ</div>
-                <div style="font-size:28px; font-weight:bold;">{cm_count:,}</div>
-                <div style="font-size:12px; opacity:0.9;">{pct1:.1f}% / {len(st.session_state.cm_filters)}条件</div>
+            <div style="text-align:center; padding:18px 12px; 
+                        background: linear-gradient(145deg, #C25E10, #D96E0A); 
+                        border-radius:14px; color:white; 
+                        box-shadow: 0 6px 16px rgba(194,94,16,0.28), inset 0 1px 0 rgba(255,255,255,0.15);">
+                <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85;">Step 1: 顧客マスタ</div>
+                <div style="font-size:32px; font-weight:700; margin:4px 0; text-shadow: 0 1px 2px rgba(0,0,0,0.10);">{cm_count:,}</div>
+                <div style="font-size:11px; opacity:0.85;">{pct1:.1f}% / {len(st.session_state.cm_filters)}条件</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col3:
             pct2 = after_cm_pos / total_customers * 100 if total_customers > 0 else 100
             st.markdown(f"""
-            <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['primary_lighter']}, {COLORS['primary_lightest']}); 
-                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(251, 191, 36, 0.25);">
-                <div style="font-size:11px; opacity:0.9;">STEP 2: 購買履歴</div>
-                <div style="font-size:28px; font-weight:bold;">{after_cm_pos:,}</div>
-                <div style="font-size:12px; opacity:0.9;">{pct2:.1f}% / {len(st.session_state.pos_filters)}条件</div>
+            <div style="text-align:center; padding:18px 12px; 
+                        background: linear-gradient(145deg, #D96E0A, #E8913A); 
+                        border-radius:14px; color:white; 
+                        box-shadow: 0 6px 16px rgba(217,110,10,0.25), inset 0 1px 0 rgba(255,255,255,0.18);">
+                <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85;">Step 2: 購買履歴</div>
+                <div style="font-size:32px; font-weight:700; margin:4px 0; text-shadow: 0 1px 2px rgba(0,0,0,0.08);">{after_cm_pos:,}</div>
+                <div style="font-size:11px; opacity:0.85;">{pct2:.1f}% / {len(st.session_state.pos_filters)}条件</div>
             </div>
             """, unsafe_allow_html=True)
         
         with col4:
             pct3 = len(final_ids) / total_customers * 100 if total_customers > 0 else 100
             st.markdown(f"""
-            <div style="text-align:center; padding:15px; background:linear-gradient(135deg, {COLORS['success']}, {COLORS['success_light']}); 
-                        border-radius:12px; color:white; box-shadow: 0 4px 6px rgba(194, 97, 10, 0.25);">
-                <div style="font-size:11px; opacity:0.9;">STEP 3: 最終抽出</div>
-                <div style="font-size:28px; font-weight:bold;">{len(final_ids):,}</div>
-                <div style="font-size:12px; opacity:0.9;">{pct3:.1f}% / {len(st.session_state.ph_filters)}条件</div>
+            <div style="text-align:center; padding:18px 12px; 
+                        background: linear-gradient(145deg, #E8913A, #F0AD5E); 
+                        border-radius:14px; color:white; 
+                        box-shadow: 0 6px 16px rgba(232,145,58,0.25), inset 0 1px 0 rgba(255,255,255,0.20);">
+                <div style="font-size:10px; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85;">Step 3: 最終抽出</div>
+                <div style="font-size:32px; font-weight:700; margin:4px 0; text-shadow: 0 1px 2px rgba(0,0,0,0.06);">{len(final_ids):,}</div>
+                <div style="font-size:11px; opacity:0.85;">{pct3:.1f}% / {len(st.session_state.ph_filters)}条件</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -523,7 +542,7 @@ with analyst_tab:
         </div>
         <div>
             <h3 style="margin: 0; color: {COLORS['text_dark']};">自然言語で顧客を抽出</h3>
-            <p style="margin: 0; color: #6B7280; font-size: 0.85rem;">セマンティックビュー: {SEMANTIC_VIEW}</p>
+            <p style="margin: 0; color: {COLORS['text_sub']}; font-size: 0.85rem;">セマンティックビュー: {SEMANTIC_VIEW}</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -618,7 +637,7 @@ with csv_tab:
     <div style="display: flex; align-items: center; margin-bottom: 1rem;">
         <div>
             <h3 style="margin: 0; color: {COLORS['text_dark']};">CSVから顧客データを抽出</h3>
-            <p style="margin: 0; color: #6B7280; font-size: 0.85rem;">顧客IDリストをアップロードして顧客マスタを取得</p>
+            <p style="margin: 0; color: {COLORS['text_sub']}; font-size: 0.85rem;">顧客IDリストをアップロードして顧客マスタを取得</p>
         </div>
     </div>
     """, unsafe_allow_html=True)
