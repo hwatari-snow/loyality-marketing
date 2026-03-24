@@ -189,7 +189,7 @@ st.markdown("""
 st.markdown(f"""
 <div style="margin-bottom: 1rem; padding-bottom: 0.8rem; border-bottom: 3px solid {COLORS['primary']};">
     <h1 style="margin: 0; color: {COLORS['text_dark']}; font-size: 2rem;">顧客抽出ダッシュボード</h1>
-    <p style="margin: 5px 0 0 0; color: #8C7A66; font-size: 0.9rem;">Loyalty Marketing Customer Extraction</p>
+    <p style="margin: 5px 0 0 0; color: #8C7A66; font-size: 0.9rem;">Customer Extraction</p>
 </div>
 """, unsafe_allow_html=True)
 
