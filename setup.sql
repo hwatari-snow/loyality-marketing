@@ -19,7 +19,7 @@ CREATE WAREHOUSE IF NOT EXISTS LM_WH
     AUTO_SUSPEND = 60
     AUTO_RESUME = TRUE
     INITIALLY_SUSPENDED = TRUE
-    COMMENT = 'Warehouse for Loyalty Marketing Demo';
+    COMMENT = 'Warehouse for LM Demo';
 
 USE WAREHOUSE LM_WH;
 
@@ -40,7 +40,7 @@ USE SCHEMA LM;
 CREATE OR REPLACE STAGE LM_DATA_STAGE
     DIRECTORY = (ENABLE = TRUE)
     ENCRYPTION = (TYPE = 'SNOWFLAKE_SSE')
-    COMMENT = 'Stage for Loyalty Marketing Demo data';
+    COMMENT = 'Stage for LM Demo data';
 
 CREATE OR REPLACE API INTEGRATION lm_git_api_integration
     API_PROVIDER = git_https_api
