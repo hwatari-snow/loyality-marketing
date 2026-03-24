@@ -1,6 +1,6 @@
 # Snowflake Streamlitデモ
 
-ロイヤルティプログラムの顧客・取引・ポイントデータを Snowflake に構築し、Streamlit ダッシュボードで顧客抽出を行うデモ環境です。
+顧客・取引・ポイントデータを Snowflake に構築し、Streamlit ダッシュボードで顧客抽出を行うデモ環境です。
 
 ## セットアップ手順
 
