@@ -49,7 +49,7 @@ CREATE OR REPLACE API INTEGRATION lm_git_api_integration
 
 CREATE OR REPLACE GIT REPOSITORY LM_GIT_REPO
     API_INTEGRATION = lm_git_api_integration
-    ORIGIN = 'https://github.com/hwatari-snow/loyality-marketing.git';
+    ORIGIN = 'https://github.com/hwatari-snow/Snowflake_CustomerAnalysis.git';
 
 ALTER GIT REPOSITORY LM_GIT_REPO FETCH;
 
